@@ -1,0 +1,81 @@
+"""Ask the ledger: plain-English questions about Ridgeline's accounts payable (TechHub challenge 413).
+
+Claude writes the SQL; the app shows it, checks it is a single read-only SELECT, and runs it against a read-only copy
+of the database. You check the SQL before you trust the answer.
+Secrets (.streamlit/secrets.toml on your computer; Settings > Secrets on Streamlit Community Cloud):
+    ANTHROPIC_API_KEY = "sk-ant-..."
+"""
+import re
+import sqlite3
+import anthropic
+import pandas as pd
+import streamlit as st
+
+DB = "data/ridgeline_ap.db"
+MODEL = "claude-haiku-5-5"   # small and inexpensive; a question costs a fraction of a cent
+
+st.set_page_config(page_title="Ask the ledger", layout="wide")
+st.title("Ask the ledger")
+st.caption("Ridgeline Home & Tool accounts payable, April to September 2026 (data as of September 30, 2026)")
+
+
+@st.cache_data
+def schema() -> str:
+    """The CREATE TABLE statements, so Claude knows the tables and columns."""
+    with sqlite3.connect(f"file:{DB}?mode=ro", uri=True) as db:
+        return "\n".join(r[0] for r in db.execute("SELECT sql FROM sqlite_master WHERE type = 'table'"))
+
+
+NOTES = """Notes about the data:
+- invoices.type is 'invoice' or 'credit_memo'; credit memos have negative amounts.
+- invoices.status is open, partially_paid or paid; balance_due = amount - amount_paid - discount_taken.
+- Dates are text in YYYY-MM-DD form. Money is in US dollars.
+- purchase_orders.status is open (nothing received), partially_received or received.
+- Vendor names are in vendors.name, store names in stores.name."""
+
+
+def write_sql(question: str) -> str:
+    """Ask Claude for one SQLite SELECT statement that answers the question.
+    TODO 1: write the system prompt. Claude needs the schema (schema()), the NOTES, and clear instructions to reply
+    with one SELECT statement only. Then send the question and return the SQL text."""
+    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+    msg = client.messages.create(
+        model=st.secrets.get("ANTHROPIC_MODEL", MODEL), max_tokens=600,
+        system="TODO: your system prompt here",
+        messages=[{"role": "user", "content": question}],
+    )
+    return msg.content[0].text.strip()
+
+
+def is_safe(sql: str) -> bool:
+    """TODO 2: return True only for a single read-only query: one statement that starts with SELECT (or WITH)
+    and contains none of the words that change data (INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, ...)."""
+    return True
+
+
+def run(sql: str) -> pd.DataFrame:
+    with sqlite3.connect(f"file:{DB}?mode=ro", uri=True) as db:   # read-only: even a bad query can't change the data
+        return pd.read_sql_query(sql.strip().rstrip(";"), db)
+
+
+question = st.text_input("Your question", placeholder="Which vendor had the largest invoice spend in August 2026?")
+if st.button("Ask", disabled=not question.strip()):
+    try:
+        sql = write_sql(question)
+    except Exception as ex:   # a missing key, no credit left, a network problem
+        st.error(f"Claude could not answer: {ex}")
+        st.stop()
+    st.subheader("The SQL Claude wrote")
+    st.code(sql, language="sql")
+    if not is_safe(sql):
+        st.error("Not run: the app only runs a single read-only SELECT.")
+    else:
+        try:
+            st.subheader("Result")
+            st.dataframe(run(sql), hide_index=True)
+            st.caption("Check the SQL: does it filter, join and add up what the question asked?")
+        except Exception as ex:
+            st.error(f"The query failed: {ex}")
+
+with st.expander("Tables and columns"):
+    st.code(schema(), language="sql")
