@@ -43,7 +43,8 @@ def write_sql(question: str) -> str:
                 "no explanation, no code fences. Use only the tables and columns in this schema.\n\n" + schema() + "\n\n" + NOTES),
         messages=[{"role": "user", "content": question}],
     )
-    sql = msg.content[0].text.strip()
+    # newer models may send a "thinking" block first: take the first text block
+    sql = next(b.text for b in msg.content if b.type == "text").strip()
     return re.sub(r"^```(?:sql)?\s*|\s*```$", "", sql).strip()
 
 
