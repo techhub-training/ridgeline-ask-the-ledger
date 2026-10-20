@@ -27,6 +27,8 @@ def schema() -> str:
 
 
 NOTES = """Notes about the data:
+- This is Ridgeline Home & Tool's own accounts payable: Ridgeline is the buyer, never a vendor. A question about
+  "Ridgeline" means all of the data; don't filter vendor or store names for it.
 - invoices.type is 'invoice' or 'credit_memo'; credit memos have negative amounts.
 - invoices.status is open, partially_paid or paid; balance_due = amount - amount_paid - discount_taken.
 - Dates are text in YYYY-MM-DD form. Money is in US dollars.
