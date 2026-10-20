@@ -44,7 +44,8 @@ def write_sql(question: str) -> str:
         system="TODO: your system prompt here",
         messages=[{"role": "user", "content": question}],
     )
-    return msg.content[0].text.strip()
+    # newer models may send a "thinking" block first: take the first text block
+    return next(b.text for b in msg.content if b.type == "text").strip()
 
 
 def is_safe(sql: str) -> bool:
