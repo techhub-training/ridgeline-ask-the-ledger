@@ -32,6 +32,9 @@ streamlit run app.py
 
 The app calls Claude through the Anthropic API, which needs a key (from console.anthropic.com, with a few dollars of
 credit and a **spending limit** set). A question costs a fraction of a cent with the default model.
+If the console offers **identity federation** instead of a key, choose **Continue with an API key**: federation
+works only for code running on Google Cloud, AWS, Azure or GitHub Actions, not on Streamlit Community Cloud or
+your laptop.
 
 Create `.streamlit/secrets.toml` (`.gitignore` already keeps it out of Git) with:
 
