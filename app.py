@@ -1,4 +1,4 @@
-"""Ask the ledger: plain-English questions about Ridgeline's accounts payable (TechHub challenge 413).
+"""Ask the ledger: plain-English questions about Ridgeline's accounts payable (TechHub challenge 413, solution).
 
 Claude writes the SQL; the app shows it, checks it is a single read-only SELECT, and runs it against a read-only copy
 of the database. You check the SQL before you trust the answer.
@@ -35,22 +35,26 @@ NOTES = """Notes about the data:
 
 
 def write_sql(question: str) -> str:
-    """Ask Claude for one SQLite SELECT statement that answers the question.
-    TODO 1: write the system prompt. Claude needs the schema (schema()), the NOTES, and clear instructions to reply
-    with one SELECT statement only. Then send the question and return the SQL text."""
+    """Ask Claude for one SQLite SELECT statement that answers the question."""
     client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
     msg = client.messages.create(
         model=st.secrets.get("ANTHROPIC_MODEL", MODEL), max_tokens=600,
-        system="TODO: your system prompt here",
+        system=("You write SQLite queries for an accountant. Reply with exactly one SELECT statement and nothing else: "
+                "no explanation, no code fences. Use only the tables and columns in this schema.\n\n" + schema() + "\n\n" + NOTES),
         messages=[{"role": "user", "content": question}],
     )
-    return msg.content[0].text.strip()
+    sql = msg.content[0].text.strip()
+    return re.sub(r"^```(?:sql)?\s*|\s*```$", "", sql).strip()
 
 
 def is_safe(sql: str) -> bool:
-    """TODO 2: return True only for a single read-only query: one statement that starts with SELECT (or WITH)
-    and contains none of the words that change data (INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, ...)."""
-    return True
+    """One statement, starting with SELECT (or WITH), and no words that change data."""
+    body = sql.strip().rstrip(";")
+    if ";" in body:
+        return False
+    if not re.match(r"(?is)^\s*(select|with)\b", body):
+        return False
+    return not re.search(r"(?i)\b(insert|update|delete|drop|alter|create|replace|attach|pragma|vacuum)\b", body)
 
 
 def run(sql: str) -> pd.DataFrame:
