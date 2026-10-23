@@ -14,20 +14,11 @@ Click **Use this template › Create a new repository**. Keep the name `ridgelin
 
 ## Open it
 
-**In your browser (nothing to install):** on your copy of this repository, click **Code › Codespaces › Create codespace on main**.
-The app installs and starts by itself, and a preview opens in a few minutes. Stop the codespace when you're done
-(github.com/codespaces › ••• › Stop) so it doesn't use your free hours.
+On your copy of this repository, click **Code › Codespaces › Create codespace on main**. Everything runs in the
+codespace, in your browser: Python, the packages and Claude Code are already installed, the app starts by itself,
+and a preview opens in a few minutes. Type `claude` in the terminal to work with Claude Code (sign in the first time).
+Stop the codespace when you're done (github.com/codespaces › ••• › Stop) so it doesn't use your free hours.
 
-**On your computer:** you need Python 3.10 or newer and Git.
-
-```
-git clone https://github.com/<you>/ridgeline-ask-the-ledger.git
-cd ridgeline-ask-the-ledger
-python -m venv .venv
-source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-streamlit run app.py
-```
 ## Your Anthropic API key goes in secrets
 
 The app calls Claude through the Anthropic API, which needs a key (from console.anthropic.com, with a few dollars of
@@ -44,6 +35,13 @@ ANTHROPIC_API_KEY = "sk-ant-..."
 
 Never put the key in `app.py`: a key in a public repository is found by bots within minutes and spent.
 
+## Where your data goes (Level 2, Processing on a server)
+
+| Question | Answer |
+|---|---|
+| Who runs the code? | Streamlit Community Cloud runs `app.py`. |
+| Where does the data go? | The ledger ships with the app as a database file opened read-only. Each question, with the table descriptions, goes to Anthropic (the Claude API) to be turned into SQL: that part leaves the app. The answers are kept nowhere. |
+| Who can reach it? | Anyone with the link spends your API credit. The key lives only in Streamlit Secrets; keep a low spending limit. |
 
 ## Your task
 
@@ -61,7 +59,7 @@ Never put the key in `app.py`: a key in a public repository is found by bots wit
    * How many purchase orders are open, with nothing received yet?
    * What is the total early-payment discount Ridgeline has taken?
 5. Optional: publish it on Streamlit Community Cloud with the key in the app's secrets. It's then public, so anyone can
-   spend your credit: keep the spending limit low, or leave this one running only on your computer.
+   spend your credit: keep the spending limit low, or leave this one running only in your codespace.
 
 
 
