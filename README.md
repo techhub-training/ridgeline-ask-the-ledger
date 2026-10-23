@@ -15,3 +15,12 @@ The model is `claude-haiku-5-5`; set `ANTHROPIC_MODEL` in secrets to try another
 
 Where it goes wrong: "spend" summed with credit memos, "Q3" read as a fiscal quarter, "open" read as "not received
 in full" (that also counts partially received POs). The SQL on screen is how you catch it.
+
+## Where your data goes (Level 2, Processing on a server)
+
+| Question | Answer |
+|---|---|
+| Who runs the code? | Streamlit Community Cloud runs `app.py`. |
+| Where does the data go? | The ledger ships with the app as a database file opened read-only. Each question, with the table descriptions, goes to Anthropic (the Claude API) to be turned into SQL: that part leaves the app. The answers are kept nowhere. |
+| Who can reach it? | Anyone with the link spends your API credit. The key lives only in Streamlit Secrets; keep a low spending limit. |
+

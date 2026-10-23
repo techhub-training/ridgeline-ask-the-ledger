@@ -1,7 +1,10 @@
 {
   "name": "Ridgeline Streamlit app",
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
-  "features": { "ghcr.io/devcontainers/features/github-cli:1": {} },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
   "postCreateCommand": "pip install -r requirements.txt",
   "postAttachCommand": "streamlit run app.py --server.headless true",
   "forwardPorts": [8501],

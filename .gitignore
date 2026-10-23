@@ -4,3 +4,5 @@
 __pycache__/
 *.pyc
 .venv/
+# local files an app writes for itself
+cash_counts.db
